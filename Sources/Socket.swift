@@ -34,7 +34,7 @@ public typealias Byte = UInt8
 
 open class Socket {
   
-    public let address: String
+    internal(set) public var address: String
     internal(set) public var port: Int32
     internal(set) public var fd: Int32?
   
@@ -43,6 +43,11 @@ open class Socket {
         self.port = port
     }
   
+    public func bind(address: String, port: Int32) -> Bool {
+        self.address = address
+        self.port = port
+        return true
+    }
 }
 
 public enum SocketError: Error {

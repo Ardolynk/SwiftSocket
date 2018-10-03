@@ -40,19 +40,35 @@ import Foundation
 
 open class UDPClient: Socket {
     public override init(address: String, port: Int32) {
-        let remoteipbuff: [Int8] = [Int8](repeating: 0x0,count: 16)
-        let ret = c_yudpsocket_get_server_ip(address, ip: remoteipbuff)
-        guard let ip = String(cString: remoteipbuff, encoding: String.Encoding.utf8), ret == 0 else {
-            super.init(address: "", port: 0) //TODO: change to init?
-            return
+        if let ip = UDPClient.validate(address: address) {
+            super.init(address: ip, port: port)
         }
-        
-        super.init(address: ip, port: port)
+        else {
+            super.init(address: "", port: 0) //TODO: change to init?
+        }
       
         let fd: Int32 = c_yudpsocket_client()
         if fd > 0 {
             self.fd = fd
         }
+    }
+    
+    public override func bind(address: String, port: Int32) -> Bool {
+        if let ip = UDPClient.validate(address: address) {
+            return super.bind(address: ip, port: port)
+        }
+        else {
+            return false
+        }
+    }
+    
+    private static func validate(address: String) -> String? {
+        let remoteipbuff: [Int8] = [Int8](repeating: 0x0,count: 16)
+        let ret = c_yudpsocket_get_server_ip(address, ip: remoteipbuff)
+        if let ip = String(cString: remoteipbuff, encoding: String.Encoding.utf8), ret == 0 {
+            return ip
+        }
+        return nil
     }
     
     /*
